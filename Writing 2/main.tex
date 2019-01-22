@@ -1,0 +1,61 @@
+\documentclass[letterpaper,10pt,titlepage]{IEEEtran}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{hyperref}
+\usepackage{geometry}
+
+\def\name{Deval Prashant Kaku}
+\author{\name}
+\title{Writing Assignment 2}
+
+
+%% The following metadata will show up in the PDF properties
+\hypersetup{
+  colorlinks = true,
+  urlcolor = black,
+  pdfauthor = {\name},
+  pdfkeywords = {cs444 ``operating systems 2''Writing assignment 1},
+  pdfpagemode = UseNone
+}
+
+\begin{document}
+\maketitle
+\hrulefill
+
+\section{I/O between Windows, FreeBSD and Linux}
+\section*{Introduction}
+%introduction
+In computing, I/O basically communicates with the internal processing system just as we interact with the computer. Without I/O it would've been impossible to interact with a computer the way we can interact now. I/O management is an integral part of any operating system. It is so important that it has an entire I/o subsystem devoted for it's operating. Keyboard, mice, printers, disc drives, etc. are some of the popular I/O peripherals of a computer. I/O subsystems often face a very conflicting trend: 1) Using the standard interfaces for developing new devices so that it is easy to add it on an existing system. 2) Developing completely new devices which are hard to use with the existing standard interfaces. This is where device drivers come into picture; Device driver can be plugged into an operating system for handling a particular device. This paper discusses the I/O between various operating systems like Windows, FreeBSD and Linux and then we shall see the similarities and differences between these operating systems.
+
+\section*{I/O in Windows and Linux}
+All operating systems have an explicit or implicit I/O model to handle the data flow to and from it's peripheral devices. The I/O model in Windows has the following features. There is an I/O manager which displays the same interface to all the kernel-mode drivers which includes the file system drivers, intermediate drivers and the lowest drivers. The requests are sent as IRP, also called as I/O Request Packets. There are different layers in the I/O operations. I/O system is called by the I/O manager to carry out the I/O operations for the applications or the end users. These calls are intercepted by the I/O Manager and sent to the available device device drivers as one ore more IRPs. A set of standard routines are defined by the I/O Manager which follow a similar consistent implementation model among all the drivers. The drivers also object based just like the operating system. The I/O manager also provides flexible I/O services that allow environment subsystems, such as Windows and POSIX, to implement their respective I/O functions. These services include sophisticated services for asynchronous I/O that allow developers to build scalable, high-performance server applications. The Plug and Play (PnP) Manager works closely with the I/O Manager and bus device diver for guiding the allocation of hardware resources and also to keep a track of the arrival and removal time of the hardware devices. While on the other hand Linux uses Block I/O which is also called the file pointer. The only similar thing between Windows and Linux is the abstraction property in both the operating systems. Due to this layer of abstraction there is increased portability between files, application and hardware. Apart from that everything else is different between Windows and Linux. Since Linux is based on Unix, it has much more similarity with FreeBSD. Unix treats everything as a file. It is possible to directly read or write to memory using /dev/mem if you have privileges. But to do that in Windows can be almost impossible because of the drivers which do not provide direct access to the hardware. 
+
+\section*{Linux and FreeBSD}
+Unlike Windows, Linux and FreeBSD kernels share the same origin i.e. Unix which means that the basic fundamental of the I/O is similar between Linux and FreeBSD. In this section we'll be looking at the I/O in Unix as it is quite similar for both FreeBSD and Linux. The two main I/O units in Unix are block devices and character devices. in addition to that, Unix uses sockets which are used for network communication. Block devices are the devices that address a fixed size of disk memories. Buffer cache is used to buffer the data blocks. Blocked devices are usually accessed through the file system. Character devices are devices that do not use block buffer cache (eg. terminals and printers). A switch table is used to call the device drivers and it has one switch table for block devices and one for character devices. Files are used for all processes and it is achieved using file descriptors which are accessed via pipes and sockets. 
+
+
+
+
+% bibliography
+\nocite{*}%if nothing is referenced it will still show up in refs
+\bibliographystyle{plain}
+\bibliography{refs_a1}
+%end bibliography
+
+\end{document}

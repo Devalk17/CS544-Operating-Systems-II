@@ -1,0 +1,48 @@
+\documentclass[english,10pt,letterpaper,onecolumn]{IEEEtran} 
+\usepackage[margin=.75in]{geometry}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc} 
+\usepackage[noadjust]{cite}
+\usepackage{babel}  
+\usepackage{titling}
+\usepackage{listings}
+\usepackage{url}
+
+% TITLE
+\title{Concurrency 1}
+\author{
+  Deval Kaku
+}
+\date{April 15th, 2018}
+
+\begin{document}
+\begin{titlepage} 
+\maketitle
+\begin{center}
+CS544\\
+Operating Systems II\\
+Spring 2018
+\vspace{50 mm}
+\end{center}
+
+% ABSTRACT
+\begin{abstract}
+Designing a solution to the producer-consumer problem and answering the questions about concurrency.
+\end{abstract}
+\end{titlepage}
+
+% Begin of the text
+\clearpage
+\subsection*{\bf 1. What do you think the main point of this assignment is?}
+The main point of this assignment is to implement multiple threads and interact them by signaling in a C program. This assignment also aims at integrating assembly in our program. Also, this assignment is an introduction and a practice the concept of concurrency.
+
+\subsection*{\bf 2. How did you personally approach the problem? Design decisions, algorithm, etc.}
+I read about threads and pthreads on stackoverflow. I also some tutorials on YouTube for the same. After understanding the concept, it was all about creating the setup for creation and deletion of structs.  Afterwards, the data was passed to and fro between producer and consumer threads.
+
+\subsection*{\bf 3. How did you ensure your solution was correct? Testing details, for instance.}
+By printing out the data, the producer and consumer, I can make sure that which thread is currently in action. I lso printed out the total number of items in the buffer by which we can make sure whether the solution is correct or not. I added more producers and consumers to better study the program and the output I found was indeed satisfying. Also, the working rule of controlling the buffer size is functional. 
+
+\subsection*{\bf 4. What did you learn?}
+I learned to create mutex in linux in C language. In addition, I also got familiar with a new method for randomizing number; Mersenne Twister. I also learned how to make threads interact with each other using signaling.
+
+\end{document}

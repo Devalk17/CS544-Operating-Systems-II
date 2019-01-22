@@ -1,0 +1,93 @@
+\documentclass[letterpaper,10pt,titlepage]{IEEEtran}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{hyperref}
+\usepackage{geometry}
+
+\def\name{Deval Kaku}
+\author{\name}
+\title{Writing Assignment 1}
+
+
+%% The following metadata will show up in the PDF properties
+\hypersetup{
+  colorlinks = true,
+  urlcolor = black,
+  pdfauthor = {\name},
+  pdfkeywords = {cs544 ``operating systems 2''Writing assignment 1},
+  pdfpagemode = UseNone
+}
+
+\begin{document}
+\maketitle
+\hrulefill
+
+\section{Abstract}
+%introduction
+
+Processes are the heart of any singular running program in Windows, FreeBSD and Linux.
+However, these operating systems differentiate distinctively for the way they are designed and managed. A scheduler is designed which manages multiple processes in an operating system. A scheduler is the reason an operating system is able to execute multiple processes at the same time. The goal of the scheduler is to allocate resources to the system for maximum utilization of the available memory. Further, comparisons and differences between Windows, FreeBSD and Linux will be made in context to the processes and threads. \cite{Love} (pg. 43)
+
+\section{Linux}
+%Linux
+The goal of the Completely Fair Scheduler(CFS) is to maintain fairness(balance) in allocating resources to the processor. This means that all the processes must me allocated fair amount of the processor. If there is imbalance in the scheduler, i.e. the tasks are not provided fair amount of time and resources, then those tasks should be given time to execute. \cite{sarkar:online}
+The CFS maintains the virtual time (time allocated to each processor) to maintain balance. The smaller virtual time illustrates that the process has been allocated less time for the execution. Sleeper fairness is the concept which ensures that the tasks which are not currently runnable receive comparable amount of processor when they become runnable. \cite{sarkar:online} CFS run processes round-robin style for very small tasks (in quantities called slices of time), so that in a given period of time it will appear as though many processes are running in parallel. \cite{Love} (pg. 48-50)
+The CFS is not the only scheduler in Linux. Linux has two real time schedulers which tries to execute the process which have a time deadline. The two real time schedulers in Linux are FIFO and Round Robin. In Round Robin, a timeslice is assigned to a process and the program will run till the timeslice expires. Once all the process' timeslices are expired, they are renewed and run again in the original priority order. FIFO is quite similar to the Round Robin, except that it has infinite timeslice.\cite{sarkar:online}
+
+\section{Windows}
+%Windows:
+In Windows, which job has to be loaded on the CPU is determined by the NT process scheduling. FIFO is not the always the best method of scheduling tasks in Windows operating system. Processes with equal priorities are treated same by the NT process scheduler and it assigns timeslices to between same priority tasks.If a high priority job is added to the queue, it will halt the execution of the low priority process and execute the process with higher priority.
+Following are the thread priority levels in Windows:\cite{MSDN:online}
+\begin{enumerate}
+\item THREAD PRIORITY IDLE.
+\item THREAD PRIORITY LOWEST. 
+\item THREAD PRIORITY BELOW NORMAL.
+\item THREAD PRIORITY NORMAL.
+\item THREAD PRIORITY ABOVE NORMAL. 
+\item THREAD PRIORITY HIGHEST.
+\item THREAD PRIORITY TIME CRITICAL. 
+\end{enumerate}
+
+\section{FreeBSD}
+%FreeBSD:
+FreeBSD operating systems (versions 7.1 and newer) have a default scheduler called as ULE. It overpowers the traditional BSD scheduler as the traditional BSD scheduler does not completely utilize the SMT or SMP which is quite essential in the modern computers. The ULE scheduler aims at making enhanced use of SMT and SMP environments. A ULE scheduler gives a better performance in both multiprocessor and uniprocessor environments. It also provides interactive output under heavy load. The ULE scheduler, unlike the CFS, tends to favor either shorter running, or blocking processes like small scripts or text editors. One may switch a ULE scheduler and the traditional BSD scheduler anytime using the kernel compile-time tunable. \cite{ule}  
+
+\section{Comparison of process between Windows and Linux}
+%Comparison of process between Windows and Linux 
+In Linux, all the child process are forced to end if the parent process is closed. However, in Windows, if you close a parent process, the child process won't stop it's execution. In Windows, a child proces contains single information (Parent PID) of the parent process. The child process doesn't contain any other information about their parent process. \cite{process} Windows uses the CreateProcess() system call which functions similar to the Linux fork() implementation. All of the information needed to execute a program is passed in to the CreateProcess() function. Since Windows does not clone the parent process like Linux does the CreateProcess() function requires many more parameters to achieve the same effect but potentially has more control of the child process. \cite{Wini}
+
+\section{FreeBSD and Linux}
+% FreeBSD to Linux:
+FreeBSD is free and a open source just like Linux and in many ways more similar to Linux than Windows/Linux. Both FreeBSD and Linux have a monolithic kernel which means that all the processes initiate from one process during booting. This is the reason why it has the same parent, child and zombie hierarchy such as Linux. It also shares the same properties (parent PID) and POSIX functions are relatively identical between FreeBSD and Linux. \cite{freeBsdBook}
+
+\section{Conclusion}
+There are strong similarities between Windows, FreeBSD and Linux when it comes to process. Windows implements a NT process scheduler which executes the jobs based on their priorities. While on the other hand Linux has a FIFO scheduler too. the trade-off in Windows is that the child will continue it's execution even if the parent process is terminated/aborted. FreeBSD contains a unique scheduling algorithm that allows it favor either shorter running or blocking processes like small scripts or text editors. In terms of similarities, Linux is a derivative of FreeBSD operating system as it shares the same Unix-kernal design. Also, they share the same process structure.
+   
+  
+% bibliography
+\nocite{*}%if nothing is referenced it will still show up in refs
+\bibliographystyle{plain}
+\bibliography{refs_a1}
+%end bibliography
+
+\end{document}

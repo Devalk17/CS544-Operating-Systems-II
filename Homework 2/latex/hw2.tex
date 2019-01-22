@@ -1,0 +1,100 @@
+\documentclass[letterpaper,10pt,titlepage]{article}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+
+\usepackage{balance}
+%\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{hyperref}
+\usepackage{geometry}
+
+
+%pull in the necessary preamble matter for pygments output
+%\input{pygments.tex}
+
+\title{Homework }
+\author{William Maxwell, Jing Huang, Deval Prashant}
+
+\begin{document}
+\begin{minipage}[h]{\textwidth}
+\maketitle
+\begin{abstract}
+For this project we studied I/O scheduling in the Linux kernel. We implemented our own I/O scheduler, compiled and build a kernel image, and tested our scheduling algorithm.
+\end{abstract}
+\end{minipage}
+\clearpage
+\section{Design Plan}
+First, we create a new file $\texttt{block/sstf-iosched.c}$.
+We copy the contents of $\texttt{block/noop-iosched.c}$ into our new file to use as a template.
+We do a search and replace to change all instances of \textit{noop} to \textit{sstf} using the command $\texttt{\%s/noop/sstf/g}$ in $\texttt{vim}$.
+
+Next, we modify the contents of $\texttt{block/Makefile}$ so our new scheduler will be compiled. We add the line \texttt{obj-\$(CONFIG\_IOSCHED\_SSTF) += sstf-iosched.o}.
+
+We add a configuration option for the new scheduler in the $\texttt{block/Kconfig.iosched}$ file. The line $\texttt{config IOSCHED\_SSTF}$ to create the option, and the line $\texttt{default "sstf" if DEFAULT\_SSTF}$ is added to make our scheduler a default option.
+
+Now, running $\texttt{make menuconfig}$ under the block layer options you will see the new SSTF scheduler. Select it as the default scheduling algorithm and run $\texttt{make -j4 all}$.
+We also change the $\texttt{LOCALVERSION}$ variable to append the string \textit{Group12} to the kernel name. Then we can use $\texttt{uname -a}$ to be sure that we've booted into the proper kernel.
+We can now run QEMU, but we need to make sure it is using the new kernel. We simply change the path for the $\texttt{-kernel}$ flag to $\texttt{linux-yocto-3.19/arch/i386/boot/bzImage}$.
+
+\begin{align*}
+&\texttt{qemu-system-i386 -gdb tcp::5604 -S -nographic -kernel linux-yocto-3.19/arch/i386/boot/bzImage}\\
+&\texttt{-drive file=core-image-lsb-sdk-qemux86.ext4,if=virtio -enable-kvm -net none}\\
+&\texttt{-usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"}
+\end{align*}
+
+To verify that the scheduler is being used enter the command $\texttt{cat /sys/block/hdc/queue/scheduler}$ to see the list of available schedulers. The scheduler inside square brackets is the one being used.
+Finally, we create a patch file for the $\texttt{block}$ directory with the command $\texttt{git diff block/ > group12.patch}$.
+
+\section{Work Log}
+\begin{tabular}{l l l}\textbf{Detail} & \textbf{Author} & \textbf{Description}\\\hline
+\href{https://github.com/jshota/CS_544_Group12/commit/752ca01c049820caee0c25eee2eb6699199983eb}{752ca01} & Jing Huang & initial commit\\\hline
+\href{https://github.com/jshota/CS_544_Group12/commit/3e6b10a07d5478da1326c8cc8946d3b25fe040c9}{3e6b10a} & Jing Huang & add gitlog2latex.sh\\\hline
+\href{https://github.com/jshota/CS_544_Group12/commit/1b590a180c992181e8f23ddc2aaa00321a694b9d}{1b590a1} & Jing Huang & Add gitlog2latex folder\\\hline
+\href{https://github.com/jshota/CS_544_Group12/commit/0be0a6a594777ab808394a83bdbb58cdb60ba84d}{0be0a6a} & Jing Huang & Delete gitlog2latex.sh in main folder\\\hline
+\href{https://github.com/jshota/CS_544_Group12/commit/5a2cdd25c9a62fecf0701252f91d99d940e41357}{5a2cdd2} & JING HUANG & Update README.md\\\hline
+\href{https://github.com/jshota/CS_544_Group12/commit/797ede07d6b430b4fd07dba4f45b8c9166f79d48}{797ede0} & William Maxwell & patch file, sstf-iosched.c, latex template\\\hline
+\href{https://github.com/jshota/CS_544_Group12/commit/eccae7b130c5ecb9d9ae4aad4287e6b9b74452b7}{eccae7b} & will & adding latex makefile and script to generate latex table from the git history\\\hline
+\href{https://github.com/jshota/CS_544_Group12/commit/09d248d7278261ffd7662e0f9a70115dde1230ee}{09d248d} & will & test script, finished latex writeup, and modified makefile\\\hline\end{tabular}
+
+\section{Questions}
+\subsection{What do you think the main point of this assignment is?}
+There are two purposes to this assignment. The first is to understand the main ideas behind scheduling algorithms by implementing one ourselves.
+The second is to become familiar with Linux kernel development. This involves reading the documentation for scheduling algorithms and understanding the build process behind compiling your own scheduler.
+
+\subsection{How did you personally approach the problem?}
+We started by reading the Linux elevator source code. Much of this was in $\texttt{elevator.h}$. We identified the functions used to add requests to the request queue and to dispatch requests. These are the functions we needed to modify in order to implement our scheduler.
+
+Next, we studied different types of scheduling algorithms. We read pseudocode describing the methods for scheduling, and translated it into code using the Linux kernel data structures and functions.
+\subsection{How did you ensure your solution was correct?}
+We used the $\texttt{printk}$ function to write to the kernel log. We prepended our kernel messages with $\texttt{[SSTF]}$.
+Then we ran a script which writes to two files $1000$ times each. Issuing the command $\texttt{dmesg | grep [SSTF]}$ shows that our scheduler is being used.
+
+\subsection{What did you learn?}
+We learned about the uses of I/O scheduling in the kernel. We learned that scheduling is very important, since retrieving data from the hard disk is a huge bottleneck in the overall performance of the system.
+
+We learned how to compile a scheduling algorithm, and how to tell the kernel which scheduling algorithm to use.
+
+We learned how to read and understand kernel documentation. Specifically we learned the contents of $\texttt{elevator.h}$ and how the data structures for interfacing with schedulers work.
+
+Finally, we learned how the LOOK and CLOOK algorithms are implemented and learned the differences between the two algorithms.
+
+\subsection{How should the TA evaluate your work?}
+Apply the $\texttt{.patch}$ file to the $\texttt{yocto-linux-3.16/block}$ directory. We only patched the block directory, since it's the only directory we made changes to.
+Compile the kernel with $\texttt{make -j4 all}$ with the SSTF scheduler selected in $\texttt{make menuconfig}$. Boot into the VM and run the test script provided. You should see output from the command $\texttt{dmesg | grep [SSTF]}$.
+\end{document}

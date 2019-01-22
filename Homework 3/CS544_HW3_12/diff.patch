@@ -1,0 +1,185 @@
+commit ea68cb2e8b6fd40f802a51a21ac5324c2532b376
+Author: will <wmaxwell90@gmail.com>
+Date:   Tue Jun 12 12:01:59 2018 -0700
+
+    final
+
+diff --git a/arch/x86/kvm/Kconfig b/arch/x86/kvm/Kconfig
+new file mode 100644
+index 0000000..bd7465b
+--- /dev/null
++++ b/arch/x86/kvm/Kconfig
+@@ -0,0 +1,108 @@
++#
++# KVM configuration
++#
++
++source "virt/kvm/Kconfig"
++
++menuconfig VIRTUALIZATION
++	bool "Virtualization"
++	depends on HAVE_KVM || X86
++	default y
++	---help---
++	  Say Y here to get to see options for using your Linux host to run other
++	  operating systems inside virtual machines (guests).
++	  This option alone does not add any kernel code.
++
++	  If you say N, all options in this submenu will be skipped and disabled.
++
++if VIRTUALIZATION
++
++config KVM
++	tristate "Kernel-based Virtual Machine (KVM) support"
++	depends on HAVE_KVM
++	depends on HIGH_RES_TIMERS
++	# for TASKSTATS/TASK_DELAY_ACCT:
++	depends on NET && MULTIUSER
++	select PREEMPT_NOTIFIERS
++	select MMU_NOTIFIER
++	select ANON_INODES
++	select HAVE_KVM_IRQCHIP
++	select HAVE_KVM_IRQFD
++	select HAVE_KVM_IRQ_ROUTING
++	select HAVE_KVM_EVENTFD
++	select KVM_APIC_ARCHITECTURE
++	select KVM_ASYNC_PF
++	select USER_RETURN_NOTIFIER
++	select KVM_MMIO
++	select TASKSTATS
++	select TASK_DELAY_ACCT
++	select PERF_EVENTS
++	select HAVE_KVM_MSI
++	select HAVE_KVM_CPU_RELAX_INTERCEPT
++	select KVM_GENERIC_DIRTYLOG_READ_PROTECT
++	select KVM_VFIO
++	select SRCU
++	---help---
++	  Support hosting fully virtualized guest machines using hardware
++	  virtualization extensions.  You will need a fairly recent
++	  processor equipped with virtualization extensions. You will also
++	  need to select one or more of the processor modules below.
++
++	  This module provides access to the hardware capabilities through
++	  a character device node named /dev/kvm.
++
++	  To compile this as a module, choose M here: the module
++	  will be called kvm.
++
++	  If unsure, say N.
++
++config KVM_INTEL
++	tristate "KVM for Intel processors support"
++	depends on KVM
++	# for perf_guest_get_msrs():
++	depends on CPU_SUP_INTEL
++	---help---
++	  Provides support for KVM on Intel processors equipped with the VT
++	  extensions.
++
++	  To compile this as a module, choose M here: the module
++	  will be called kvm-intel.
++
++config KVM_AMD
++	tristate "KVM for AMD processors support"
++	depends on KVM
++	---help---
++	  Provides support for KVM on AMD processors equipped with the AMD-V
++	  (SVM) extensions.
++
++	  To compile this as a module, choose M here: the module
++	  will be called kvm-amd.
++
++config KVM_MMU_AUDIT
++	bool "Audit KVM MMU"
++	depends on KVM && TRACEPOINTS
++	---help---
++	 This option adds a R/W kVM module parameter 'mmu_audit', which allows
++	 auditing of KVM MMU events at runtime.
++
++config KVM_DEVICE_ASSIGNMENT
++	bool "KVM legacy PCI device assignment support"
++	depends on KVM && PCI && IOMMU_API
++	default y
++	---help---
++
++config VMCS_SYSFS
++    tristate "VMCS sysfs interface"
++    default y
++	  Provide support for legacy PCI device assignment through KVM.  The
++	  kernel now also supports a full featured userspace device driver
++	  framework through VFIO, which supersedes much of this support.
++
++	  If unsure, say Y.
++
++# OK, it's a little counter-intuitive to do this, but it puts it neatly under
++# the virtualization menu.
++source drivers/vhost/Kconfig
++source drivers/lguest/Kconfig
++
++endif # VIRTUALIZATION
+diff --git a/arch/x86/kvm/Makefile b/arch/x86/kvm/Makefile
+new file mode 100644
+index 0000000..67dc3fe
+--- /dev/null
++++ b/arch/x86/kvm/Makefile
+@@ -0,0 +1,23 @@
++
++ccflags-y += -Iarch/x86/kvm
++
++CFLAGS_x86.o := -I.
++CFLAGS_svm.o := -I.
++CFLAGS_vmx.o := -I.
++
++KVM := ../../../virt/kvm
++
++kvm-y			+= $(KVM)/kvm_main.o $(KVM)/coalesced_mmio.o \
++				$(KVM)/eventfd.o $(KVM)/irqchip.o $(KVM)/vfio.o
++kvm-$(CONFIG_KVM_ASYNC_PF)	+= $(KVM)/async_pf.o
++
++kvm-y			+= x86.o mmu.o emulate.o i8259.o irq.o lapic.o \
++			   i8254.o ioapic.o irq_comm.o cpuid.o pmu.o
++kvm-$(CONFIG_KVM_DEVICE_ASSIGNMENT)	+= assigned-dev.o iommu.o
++kvm-intel-y		+= vmx.o
++kvm-amd-y		+= svm.o
++
++obj-$(CONFIG_KVM)	+= kvm.o
++obj-$(CONFIG_KVM_INTEL)	+= kvm-intel.o
++obj-$(CONFIG_KVM_AMD)	+= kvm-amd.o
++obj-$(CONFIG_VMCS_SYSFS) += vmcs-sysfs.o
+diff --git a/arch/x86/kvm/vmcs-sysfs.c b/arch/x86/kvm/vmcs-sysfs.c
+new file mode 100644
+index 0000000..5198361
+--- /dev/null
++++ b/arch/x86/kvm/vmcs-sysfs.c
+@@ -0,0 +1,30 @@
++#include <linux/init.h>
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <asm/vmx.h>
++
++static unsigned long guest_activity state;
++
++static int vmcs_sysfs_init(void) {
++    struct vmcs *current_vmcs;
++
++    asm volatile("VMPTRST %0" : "=m"(current_vmcs));
++    asm volatile("VMREAD %0, %1"
++                    : "=r"(guest_activity_state)
++                    : "r"(enc_guest_activity_state)
++                );
++
++    printk(KERN_INFO "initializing VMCS, guest activity state is %lu\n", guest_activity_state);
++
++}
++
++static void vmcs_sysfs_exit(void) {
++    printk(KERN_INFO "exiting VMCS, guest activity state is %lu\n" guest_activity_state);
++}
++
++module_init(vmcs_sysfs_init);
++moduel_exit(vmcs_sysfs_exit);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Group 12");
++MODULE_DESCRIPTION("An implementation of a VMCS sysfs interface");

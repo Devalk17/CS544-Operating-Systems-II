@@ -1,0 +1,178 @@
+\documentclass[english,10pt,letterpaper,onecolumn]{IEEEtran} 
+  \usepackage[margin=.75in]{geometry}
+  \usepackage{graphicx}
+  \usepackage[utf8]{inputenc} 
+  \usepackage[noadjust]{cite}
+  \usepackage{babel}  
+  \usepackage{titling}
+  \usepackage{listings}
+  \usepackage{url}
+  \usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+  \usepackage{color}
+  \lstset{%
+    basicstyle=\ttfamily\footnotesize,
+    backgroundcolor=\color{gray!10},%
+    tabsize=3,
+    language=bash,
+    columns=fullflexible,
+    %frame=shadowbox,
+    frame=leftline,
+    rulesepcolor=\color{blue},
+    xleftmargin=20pt,
+    framexleftmargin=15pt,
+    keywordstyle=\color{black}\bf,
+    commentstyle=\color{OliveGreen},
+    %stringstyle=\color{red},
+    breaklines=true,
+    %numbers=left,
+    %numberstyle=\tiny,
+    %numbersep=5pt,
+    showstringspaces=false,
+    postbreak=\mbox{{/}\space},
+    emph={str},emphstyle={\color{magenta}},
+    alsoletter=-,%to allow qemu-system...
+    %add extra keywords here.
+    emph={%  
+      cd, cp, qemu-system-i386, mv, mkdir, make, for, git, gdb, uname, tar, chmod, vim%
+      },emphstyle={\color{black}\bf},
+    %remove keywords below
+    deletekeywords={enable, continue}
+  }%
+  
+  % TITLE
+  \title{Project 1: Getting Acquainted}
+  \author{
+    Deval Kaku \hspace{.5cm}
+    \and
+    Jing Huang \hspace{.5cm}
+    \and
+    Saeed Khorram
+  }
+  \date{April 15th, 2018}
+  
+  \begin{document}
+  \begin{titlepage} 
+  \pagenumbering{gobble}
+  \maketitle
+  \begin{center}
+  CS544\\
+  Operating Systems II\\
+  Spring 2018
+  \vspace{50 mm}
+  \end{center}
+  
+  % ABSTRACT
+  \begin{abstract}
+  In this assignment, we run the commands which are used to setup the Yocto version of Linux which is running on a Qemu virtual machine. This document also contains a command log used to setup the virtual machine and an explanation of flags used in the process 
+  \end{abstract}
+  \end{titlepage}
+  
+  \IEEEpeerreviewmaketitle
+  \pagenumbering{arabic}
+  \section{Log of Commands}
+  \flushleft
+  Create the group folder and change the permission.
+  \begin{lstlisting}
+  cd /scratch/spring2018
+  mkdir 12
+  chmod -R 777 12
+  \end{lstlisting}
+  Clone the kernel image to the group folder.
+  \begin{lstlisting}
+  cd 12
+  git clone git://git.yoctoproject.org/linux-yocto-3.19
+  \end{lstlisting}
+  Switch to the “v3.19.2” tag.
+  \begin{lstlisting}
+  git checkout tags/v3.19.2
+  make tags
+  \end{lstlisting}
+  Copy all the necessary files to the group folder, source the environment variables, and then build the kernel.
+  \begin{lstlisting}
+  cp /scratch/files/* /scratch/spring2018/12/
+  cp config-3.19.2-yocto-standard ./linux-yocto-3.19/.config
+  source environment-setup-i586-poky-linux
+  make -j4 all
+  \end{lstlisting}
+  Run QEMU emulator.
+  \begin{lstlisting}
+  qemu-system-i386 -gdb tcp::5512 -S -nographic -kernel bzImage-qemux86.bin -drive file=core-image-lsb-sdk-qemux86.ext4,if=virtio -enable-kvm -net none -usb -localtime -- no-reboot --append "root=/dev/vda rw console=ttyS0 debug"
+  \end{lstlisting}
+  Open a new terminal (the second one), and run gdb debugger.
+  \begin{lstlisting}
+  cd /scratch/spring2018/12/linux-yocto-3.19
+  gdb vmlinux
+  \end{lstlisting}
+  Boot the built kernel.
+  \begin{lstlisting}
+  (gdb) target remote: 5512
+  (gdb) continue
+  \end{lstlisting}
+  
+  \newpage
+  \section{Explanation Of Flags}
+  
+  \begin{itemize}
+  \item -gdb tcp::5512 \\
+  Open a GDB server on TCP port 5512.
+  \item -S \\
+  Do not start CPU at startup.
+  \item -nographic \\
+  Disable graphical output so QEMU is just a command line application.
+  \item -kernel bzImage-qemux86.bin \\
+  Use bzImage-qemux86.bin as kernel image for the VM.
+  \item -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio \\
+  Define a new drive with disk image as core-image-lsb-sdk-qemux86.ext4. The ‘if’ option defines on which type on interface the drive is connected. In this case it is virtio, which is short for virtualization.
+  \item -enable-kvm \\
+  Enables KVM full virtualization support.
+  \item -net none \\
+  This setting is for network devices. The option "none" specifies to not configure any network devices.
+  \item -usb \\ 
+  This enables the USB driver.
+  \item -localtime \\ 
+  Set the VM to sync with local time.
+  \item --no-reboot \\
+  Exit instead of rebooting.
+  \item --append "root=/dev/vda rw console=ttyS0 debug" \\
+  Use "root=/dev/vda rw console=ttyS0 debug" as kernel command line. Specifically, “root=/dev/vda” specifies where the root directory is to mount and boot correctly. “console=ttyS0” tells the kernel to use the “ttyS0” console.
+  \end{itemize}
+  
+  \newpage
+  \section{Version Control Log}
+  
+  \begin{center}
+   \begin{tabular}{||c c c ||} 
+   \hline
+   Date & Author & Commit \\ 
+   \hline\hline
+   4/15/18 & Jing Huang & 752ca01c049820caee0c25eee2eb6699199983eb\\ 
+   \hline
+   4/15/18 & Jing Huang & cf2c5abbd53a5e81c70c30d7fd618ef291878a3f\\
+   \hline
+  \end{tabular}
+  \end{center}
+  
+  \section{Work Log}
+  
+  \begin{center}
+   \begin{tabular}{||c c c ||} 
+   \hline
+   Date & Hours & Work Done\\ 
+   \hline\hline
+   4/13/18 & 1 & Group meeting, cloned repo and setup the VM\\ 
+   \hline
+    4/14/18 & 2 & Group meeting, started writeup\\ 
+   \hline
+   4/15/18 & 4 & Finished writeup, made makefile, submitted\\
+   [1ex] 
+   \hline
+  \end{tabular}
+  \end{center}
+  
+  % references, IEEE format
+  %\subsection*{\bf References}
+  %\begin{enumerate}
+  %\item S.Weil, "QEMU Binaries for Windows and QEMU Documentation" Dec 21, 2017 {\textit {QEMU Emulator User Documentation}} [Online] Available: https://qemu.weilnetz.de/w64/2012/2012-12-04/qemu-doc.html [Accessed on Apr 07, 2018]
+  %\end{enumerate}
+  
+  \end{document}
